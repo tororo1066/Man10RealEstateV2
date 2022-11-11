@@ -32,7 +32,10 @@ class UserData {
                     SJavaPlugin.mysql.execute("update user_data set mcid = '${name}' where uuid = '${data.uuid}'")
                 }
             }
-            data.perms = ArrayList(result.getString("perms").split(",").map { Perm.valueOf(it) })
+            val perms = result.getString("perms")
+            if (perms != ""){
+                data.perms = ArrayList(perms.split(",").map { Perm.valueOf(it) })
+            }
             data.rent = result.getDouble("rent")
             return data
         }

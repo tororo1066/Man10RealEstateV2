@@ -42,14 +42,14 @@ class MRECommand: SCommand("mrev2",Man10RealEstateV2.prefix,"mrev2.user") {
 
     @SCommandBody("mrev2.op")
     val giveWand = opCommand().addArg(SCommandArg("wand")).setPlayerExecutor {
-        val item = SItem(Material.STICK).setDisplayName("§a範囲指定のわんど").setCustomData(Man10RealEstateV2.plugin,"wand",
+        val item = SItem(Material.STICK).setDisplayName("§a土地の範囲を指定するわんど...みたいな").setCustomData(Man10RealEstateV2.plugin,"wand",
             PersistentDataType.INTEGER,1)
         it.sender.inventory.setItemInMainHand(item)
 
         it.sender.sendPrefixMsg(SStr("&aプレゼント"))
     }
 
-    @SCommandBody("mg.op")
+    @SCommandBody("mrev2.op")
     val createCity = opCommand().addArg(SCommandArg("create")).addArg(SCommandArg("city")).addArg(SCommandArg().addAlias("内部名")).setPlayerExecutor {
         val meta = it.sender.inventory.itemInMainHand.itemMeta
         val firstLoc = meta.persistentDataContainer[NamespacedKey(Man10RealEstateV2.plugin,"firstloc"), PersistentDataType.STRING]
@@ -78,7 +78,7 @@ class MRECommand: SCommand("mrev2",Man10RealEstateV2.prefix,"mrev2.user") {
 
     }
 
-    @SCommandBody("mg.op")
+    @SCommandBody("mrev2.op")
     val createRegion = opCommand().addArg(SCommandArg("create")).addArg(SCommandArg("region")).addArg(SCommandArg(Man10RealEstateV2.cityData.keys).addAlias("city名")).addArg(SCommandArg().addAlias("内部名")).setPlayerExecutor {
         val meta = it.sender.inventory.itemInMainHand.itemMeta
         val firstLoc = meta.persistentDataContainer[NamespacedKey(Man10RealEstateV2.plugin,"firstloc"), PersistentDataType.STRING]
@@ -122,8 +122,14 @@ class MRECommand: SCommand("mrev2",Man10RealEstateV2.prefix,"mrev2.user") {
     }
 
     @SCommandBody("mrev2.op")
+    val editCity = opCommand().addArg(SCommandArg("edit")).addArg(SCommandArg("city")).addArg(SCommandArg(Man10RealEstateV2.cityData.keys)).setPlayerExecutor {
+        val city = Man10RealEstateV2.cityData[it.args[3]]!!.clone()
+        CityEdit(city).open(it.sender)
+    }
+
+    @SCommandBody("mrev2.op")
     val reloadCommands = opCommand().addArg(SCommandArg("reloadCommands")).setNormalExecutor {
         reloadSCommandBodies()
-        it.sender.sendPrefixMsg(SStr("&aCommand Reloaded"))
+        it.sender.sendPrefixMsg(SStr("&aりろーどしたよ！"))
     }
 }

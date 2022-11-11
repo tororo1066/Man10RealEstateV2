@@ -9,7 +9,7 @@ import tororo1066.man10realestatev2.data.enumData.TaxCycle
 import tororo1066.tororopluginapi.SJavaPlugin
 import java.io.File
 
-class CityData {
+class CityData: Cloneable {
 
     lateinit var world: World
 
@@ -34,6 +34,10 @@ class CityData {
     val regions = HashMap<String,RegionData>()
 
     var loaded = false
+
+    public override fun clone(): CityData {
+        return super.clone() as CityData
+    }
 
     companion object{
         fun loadFromYml(file: File): CityData {

@@ -3,6 +3,7 @@ package tororo1066.man10realestatev2.listeners
 import org.bukkit.Bukkit
 import org.bukkit.Material
 import org.bukkit.NamespacedKey
+import org.bukkit.block.BlockState
 import org.bukkit.block.Chest
 import org.bukkit.block.Sign
 import org.bukkit.event.block.BlockPlaceEvent
@@ -31,6 +32,9 @@ class SignListener {
         val data = state.persistentDataContainer[NamespacedKey(Man10RealEstateV2.plugin,"region"), PersistentDataType.STRING]!!
         val city = CityData.findCity(block.location)?:return
         val region = city.regions[data]?:return
+
+        updateSign(state,region)
+
         e.player.sendPrefixMsg(SStr("&a==========${region.displayName}&a&lの情報=========="))
         e.player.sendPrefixMsg(SStr("&aID:$data"))
         e.player.sendPrefixMsg(SStr("&aステータス:${region.state.displayName}"))
@@ -70,5 +74,13 @@ class SignListener {
                 state.update()
             }
         }
+    }
+
+    private fun updateSign(state: Sign, region: RegionData){
+        state.line(0,SStr("&eID:${region.includeName}").toTextComponent())
+        state.line(1,SStr(region.displayName).toTextComponent())
+        state.line(2,SStr("&d&l${if (region.ownerUUID != null) Bukkit.getOfflinePlayer(region.ownerUUID!!).name else "Admin"}").toTextComponent())
+        state.line(3,SStr("&a&l${region.state.displayName}").toTextComponent())
+        state.update()
     }
 }

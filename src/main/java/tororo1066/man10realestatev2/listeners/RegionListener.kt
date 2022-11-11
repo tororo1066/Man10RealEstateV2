@@ -99,8 +99,9 @@ class RegionListener {
             if (Man10RealEstateV2.inRegion(loc,data.startLoc,data.endLoc)){
                 if (data.state == RegionData.State.DANGER)return true
                 if (data.state == RegionData.State.FREE && perm != UserData.Perm.BLOCK)return true
-
+                if (data.ownerUUID == p.uniqueId)return true
                 val userData = data.players[p.uniqueId]?:return false
+                if (userData.perms.contains(UserData.Perm.ALL))return true
                 return userData.perms.contains(perm)
             }
         }

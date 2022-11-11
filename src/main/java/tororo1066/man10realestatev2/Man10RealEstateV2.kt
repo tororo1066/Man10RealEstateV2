@@ -22,7 +22,7 @@ class Man10RealEstateV2: SJavaPlugin(UseOption.MySQL,UseOption.SConfig,UseOption
         lateinit var bank: BankAPI
         lateinit var sInput: SInput
         val cityData = HashMap<String,CityData>()
-        val prefix = SStr("&c[&dMan10RealEstate&eV2&c]&r").toString()
+        val prefix = SStr("&4[&dMan10RealEstate&eV2&4]&r").toString()
 
         fun inRegion(loc: Location, start: Triple<Int,Int,Int>, end: Triple<Int,Int,Int>): Boolean{
             fun contains(start: Int, end: Int, loc: Int) = IntProgression.fromClosedRange(start,end,if (start - end >= 0) -1 else 1).contains(loc)
@@ -40,6 +40,7 @@ class Man10RealEstateV2: SJavaPlugin(UseOption.MySQL,UseOption.SConfig,UseOption
         plugin = this
         sInput = SInput(this)
         bank = BankAPI(this)
+        createTables()
 
         File(dataFolder.path + "/city/").listFiles()?.forEach {
             if (it.extension != "yml")return@forEach
@@ -82,8 +83,8 @@ class Man10RealEstateV2: SJavaPlugin(UseOption.MySQL,UseOption.SConfig,UseOption
                         calendar.set(Calendar.HOUR_OF_DAY,0)
 
                         //最後に払った賃料の時間を変数に保存させる
-                        val lastRentValue = if (region.rentCycle == RegionData.RentCycle.MONTH_CHANGED) calendar.time.time else region.lastRent + region.rentCycle.amount
-                        if (mysql.asyncExecute("update region_data set lastRent = $lastRentValue where region_id = '${region.includeName}'")){
+                        val lastRentValue = if (region.rentCycle == RegionData.RentCycle.MONTH_CHANGED) calendar.time.time / 1000 else region.lastRent + region.rentCycle.amount
+                        if (mysql.asyncExecute("update region_data set lastRent = $lastRentValue where includeName = '${region.includeName}'")){
                             region.lastRent = lastRentValue
                         }
                     }
@@ -137,17 +138,57 @@ class Man10RealEstateV2: SJavaPlugin(UseOption.MySQL,UseOption.SConfig,UseOption
                         calendar.set(Calendar.HOUR_OF_DAY,0)
 
                         val lastTaxValue = if (region.tax != null){
-                            if (region.taxCycle == TaxCycle.MONTH_CHANGED) calendar.time.time else region.lastTax + region.taxCycle.amount
+                            if (region.taxCycle == TaxCycle.MONTH_CHANGED) calendar.time.time / 1000 else region.lastTax + region.taxCycle.amount
                         } else {
-                            if (it.taxCycle == TaxCycle.MONTH_CHANGED) calendar.time.time else region.lastTax + it.taxCycle.amount
+                            if (it.taxCycle == TaxCycle.MONTH_CHANGED) calendar.time.time / 1000 else region.lastTax + it.taxCycle.amount
                         }
 
-                        if (mysql.asyncExecute("update region_data set lastTax = $lastTaxValue where region_id = '${region.includeName}'")){
+                        if (mysql.asyncExecute("update region_data set lastTax = $lastTaxValue where includeName = '${region.includeName}'")){
                             region.lastTax = lastTaxValue
                         }
                     }
                 }
             }
         },0,1200)
+    }
+
+    fun createTables(){
+        mysql.asyncExecute("CREATE TABLE IF NOT EXISTS `region_data` (\n" +
+                "\t`id` INT(10) NOT NULL AUTO_INCREMENT,\n" +
+                "\t`city` TEXT NULL DEFAULT NULL COLLATE 'utf8mb4_0900_ai_ci',\n" +
+                "\t`includeName` TEXT NULL DEFAULT NULL COLLATE 'utf8mb4_0900_ai_ci',\n" +
+                "\t`displayName` TEXT NULL DEFAULT NULL COLLATE 'utf8mb4_0900_ai_ci',\n" +
+                "\t`tax` DOUBLE NULL DEFAULT NULL,\n" +
+                "\t`userLimit` INT(10) NULL DEFAULT NULL,\n" +
+                "\t`buyScore` INT(10) NULL DEFAULT NULL,\n" +
+                "\t`liveScore` INT(10) NULL DEFAULT NULL,\n" +
+                "\t`defaultPrice` DOUBLE NULL DEFAULT NULL,\n" +
+                "\t`startLoc` TEXT NULL DEFAULT NULL COLLATE 'utf8mb4_0900_ai_ci',\n" +
+                "\t`endLoc` TEXT NULL DEFAULT NULL COLLATE 'utf8mb4_0900_ai_ci',\n" +
+                "\t`price` DOUBLE NULL DEFAULT NULL,\n" +
+                "\t`ownerUUID` VARCHAR(36) NULL DEFAULT NULL COLLATE 'utf8mb4_0900_ai_ci',\n" +
+                "\t`state` TEXT NULL DEFAULT NULL COLLATE 'utf8mb4_0900_ai_ci',\n" +
+                "\t`rentCycle` TEXT NULL DEFAULT NULL COLLATE 'utf8mb4_0900_ai_ci',\n" +
+                "\t`lastTax` BIGINT(19) NULL DEFAULT NULL,\n" +
+                "\t`taxCycle` TEXT NULL DEFAULT NULL COLLATE 'utf8mb4_0900_ai_ci',\n" +
+                "\t`lastRent` BIGINT(19) NULL DEFAULT NULL,\n" +
+                "\t`teleportLoc` TEXT NULL DEFAULT NULL COLLATE 'utf8mb4_0900_ai_ci',\n" +
+                "\tPRIMARY KEY (`id`) USING BTREE\n" +
+                ")\n" +
+                "COLLATE='utf8mb4_0900_ai_ci'\n" +
+                "ENGINE=InnoDB\n" +
+                ";\n")
+        mysql.asyncExecute("CREATE TABLE IF NOT EXISTS `user_data` (\n" +
+                "\t`id` INT(10) NOT NULL AUTO_INCREMENT,\n" +
+                "\t`region_id` TEXT NOT NULL COLLATE 'utf8mb4_0900_ai_ci',\n" +
+                "\t`uuid` VARCHAR(36) NOT NULL DEFAULT '' COLLATE 'utf8mb4_0900_ai_ci',\n" +
+                "\t`mcid` VARCHAR(16) NOT NULL DEFAULT '' COLLATE 'utf8mb4_0900_ai_ci',\n" +
+                "\t`perms` TEXT NOT NULL COLLATE 'utf8mb4_0900_ai_ci',\n" +
+                "\t`rent` DOUBLE NULL DEFAULT NULL,\n" +
+                "\tPRIMARY KEY (`id`) USING BTREE\n" +
+                ")\n" +
+                "COLLATE='utf8mb4_0900_ai_ci'\n" +
+                "ENGINE=InnoDB\n" +
+                ";")
     }
 }

@@ -28,7 +28,7 @@ dependencies {
     compileOnly 'io.papermc.paper:paper-api:1.17.1-R0.1-SNAPSHOT'
     api "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
     compileOnly fileTree(dir: 'libs', include: '*.jar')
-    api 'com.github.tororo1066.TororoPluginAPI:TororoPluginAPI:1fa130f17a'
+    api 'com.github.tororo1066.TororoPluginAPI:TororoPluginAPI:db50dd33b6'
 }
 
 def targetJavaVersion = 17
