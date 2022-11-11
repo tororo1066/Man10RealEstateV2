@@ -1,0 +1,7 @@
+checkDatabasePlayerName: true
+mysql:
+  host: localhost
+  port: 3306
+  pass: pass
+  user: root
+  db: mre

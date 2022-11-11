@@ -1,0 +1,12 @@
+name: Man10RealEstateV2
+version: '${version}'
+main: tororo1066.man10realestatev2.Man10RealEstateV2
+api-version: 1.17
+
+commands:
+  mrev2:
+
+permissions:
+  mrev2.user:
+  mrev2.op:
+    default: op
