@@ -47,6 +47,11 @@ class SignListener {
                 region.buyRegion(e.player)
             },{},60)
         }
+        if (region.state == RegionData.State.LOCK && region.ownerUUID == e.player.uniqueId){
+            Man10RealEstateV2.sInput.clickAccept(e.player,"§d§l[土地を買い戻す！]",{
+                region.buyRegion(e.player)
+            },{},60)
+        }
     }
 
     @SEventHandler

@@ -114,7 +114,7 @@ class Man10RealEstateV2: SJavaPlugin(UseOption.MySQL,UseOption.SConfig,UseOption
                         }
                         fun lock(){
                             if (mysql.asyncExecute("update region_data set price = ${region.defaultPrice * 3}, state = '${RegionData.State.LOCK}' where region_id = '${region.includeName}'")){
-                                region.price = region.defaultPrice * 3
+                                region.price = if (region.tax != null) region.tax!! * 3 else it.tax * 3
                                 region.state = RegionData.State.LOCK
                             }
                         }

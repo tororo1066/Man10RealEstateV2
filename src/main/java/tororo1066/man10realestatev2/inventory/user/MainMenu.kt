@@ -17,7 +17,7 @@ class MainMenu: SInventory(Man10RealEstateV2.plugin,"§aMainMenu",1) {
                 override fun renderMenu(): Boolean {
                     val filtered = ArrayList<RegionData>()
                     Man10RealEstateV2.cityData.values.forEach { data ->
-                        filtered.addAll(data.regions.values.filter { filter -> filter.ownerUUID == e.whoClicked.uniqueId || filter.players[e.whoClicked.uniqueId]?.perms?.contains(UserData.Perm.ALL) == true })
+                        filtered.addAll(data.regions.values.filter { filter -> (filter.ownerUUID == e.whoClicked.uniqueId || filter.players[e.whoClicked.uniqueId]?.perms?.contains(UserData.Perm.ALL) == true) && filter.state != RegionData.State.LOCK })
                     }
 
                     setResourceItems(ArrayList(filtered.map { map -> SInventoryItem(Material.PAPER).setDisplayName(map.includeName).setCanClick(false).setClickEvent {

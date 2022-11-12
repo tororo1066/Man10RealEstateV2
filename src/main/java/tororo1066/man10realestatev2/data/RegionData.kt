@@ -48,10 +48,10 @@ class RegionData {
 
     enum class RentCycle(val displayName: String, val amount: Long){
         NONE("無し",0),
-        DAY_1("1日ごと",1440000),
-        DAY_7("1週間ごと",1440000 * 7),
-        DAY_15("15日ごと",1440000 * 15),
-        DAY_30("30日ごと",1440000 * 30),
+        DAY_1("1日ごと",1440),
+        DAY_7("1週間ごと",1440 * 7),
+        DAY_15("15日ごと",1440 * 15),
+        DAY_30("30日ごと",1440 * 30),
         MONTH_CHANGED("月の変わり目",0)
     }
 
@@ -64,7 +64,7 @@ class RegionData {
     }
 
     fun buyRegion(p: Player): Boolean {
-        if (state != State.ONSALE){
+        if (state != State.ONSALE && state != State.LOCK){
             p.sendPrefixMsg(SStr("&cこの土地は販売されていません！"))
             return false
         }
