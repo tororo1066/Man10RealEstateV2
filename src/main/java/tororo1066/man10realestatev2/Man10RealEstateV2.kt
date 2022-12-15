@@ -5,6 +5,7 @@ import org.bukkit.Location
 import org.bukkit.command.CommandSender
 import red.man10.man10bank.BankAPI
 import tororo1066.man10realestatev2.data.CityData
+import tororo1066.man10realestatev2.data.LikeData
 import tororo1066.man10realestatev2.data.RegionData
 import tororo1066.man10realestatev2.data.enumData.TaxCycle
 import tororo1066.tororopluginapi.SInput
@@ -14,6 +15,7 @@ import tororo1066.tororopluginapi.utils.toCalender
 import java.io.File
 import java.util.Calendar
 import java.util.Date
+import java.util.UUID
 
 class Man10RealEstateV2: SJavaPlugin(UseOption.MySQL,UseOption.SConfig,UseOption.Vault) {
 
@@ -22,7 +24,10 @@ class Man10RealEstateV2: SJavaPlugin(UseOption.MySQL,UseOption.SConfig,UseOption
         lateinit var bank: BankAPI
         lateinit var sInput: SInput
         val cityData = HashMap<String,CityData>()
+        val likeData = HashMap<UUID,LikeData>()
         val prefix = SStr("&4[&dMan10RealEstate&eV2&4]&r").toString()
+
+        var regionPriceLimit = -1.0
 
         fun inRegion(loc: Location, start: Triple<Int,Int,Int>, end: Triple<Int,Int,Int>): Boolean{
             fun contains(start: Int, end: Int, loc: Int) = IntProgression.fromClosedRange(start,end,if (start - end >= 0) -1 else 1).contains(loc)
@@ -35,17 +40,25 @@ class Man10RealEstateV2: SJavaPlugin(UseOption.MySQL,UseOption.SConfig,UseOption
 
     }
 
+    fun reload(){
+        reloadConfig()
+        regionPriceLimit = config.getDouble("regionPriceLimit")
+        cityData.clear()
+        File(dataFolder.path + "/city/").listFiles()?.forEach {
+            if (it.extension != "yml")return@forEach
+            cityData[it.nameWithoutExtension] = CityData.loadFromYml(it)
+        }
+    }
+
     override fun onStart() {
         saveDefaultConfig()
         plugin = this
         sInput = SInput(this)
         bank = BankAPI(this)
         createTables()
+        reload()
 
-        File(dataFolder.path + "/city/").listFiles()?.forEach {
-            if (it.extension != "yml")return@forEach
-            cityData[it.nameWithoutExtension] = CityData.loadFromYml(it)
-        }
+
 
         Bukkit.getScheduler().runTaskTimer(this, Runnable {
             val now = Date()
@@ -107,13 +120,15 @@ class Man10RealEstateV2: SJavaPlugin(UseOption.MySQL,UseOption.SConfig,UseOption
 
                     if (taxInfo){
                         if (region.state == RegionData.State.LOCK){
-                            if (mysql.asyncExecute("update region_data set price = ${region.defaultPrice}, state = '${RegionData.State.ONSALE}' where region_id = '${region.includeName}'")){
-                                region.price = region.defaultPrice
+                            val default = if (region.defaultPrice != null) region.defaultPrice!! else it.defaultPrice
+                            if (mysql.asyncExecute("update region_data set price = ${default}, state = '${RegionData.State.ONSALE}' where region_id = '${region.includeName}'")){
+                                region.price = default
                                 region.state = RegionData.State.ONSALE
                             }
                         }
                         fun lock(){
-                            if (mysql.asyncExecute("update region_data set price = ${region.defaultPrice * 3}, state = '${RegionData.State.LOCK}' where region_id = '${region.includeName}'")){
+                            val default = if (region.defaultPrice != null) region.defaultPrice!! else it.defaultPrice
+                            if (mysql.asyncExecute("update region_data set price = ${default * 3}, state = '${RegionData.State.LOCK}' where region_id = '${region.includeName}'")){
                                 region.price = if (region.tax != null) region.tax!! * 3 else it.tax * 3
                                 region.state = RegionData.State.LOCK
                             }
@@ -190,5 +205,15 @@ class Man10RealEstateV2: SJavaPlugin(UseOption.MySQL,UseOption.SConfig,UseOption
                 "COLLATE='utf8mb4_0900_ai_ci'\n" +
                 "ENGINE=InnoDB\n" +
                 ";")
+        mysql.asyncExecute("CREATE TABLE IF NOT EXISTS `like_data` (\n" +
+                "\t`id` INT(10) NOT NULL AUTO_INCREMENT,\n" +
+                "\t`uuid` VARCHAR(36) NOT NULL DEFAULT '0' COLLATE 'utf8mb4_0900_ai_ci',\n" +
+                "\t`mcid` VARCHAR(16) NOT NULL DEFAULT '0' COLLATE 'utf8mb4_0900_ai_ci',\n" +
+                "\t`region_id` TEXT NULL DEFAULT NULL COLLATE 'utf8mb4_0900_ai_ci',\n" +
+                "\tPRIMARY KEY (`id`) USING BTREE\n" +
+                ")\n" +
+                "COLLATE='utf8mb4_0900_ai_ci'\n" +
+                "ENGINE=InnoDB\n" +
+                ";\n")
     }
 }

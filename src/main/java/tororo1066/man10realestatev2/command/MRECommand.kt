@@ -6,6 +6,7 @@ import org.bukkit.Sound
 import org.bukkit.persistence.PersistentDataType
 import tororo1066.man10realestatev2.Man10RealEstateV2
 import tororo1066.man10realestatev2.Man10RealEstateV2.Companion.sendPrefixMsg
+import tororo1066.man10realestatev2.convert.MREConvert
 import tororo1066.man10realestatev2.data.CityData
 import tororo1066.man10realestatev2.data.RegionData
 import tororo1066.man10realestatev2.inventory.op.CityEdit
@@ -16,8 +17,11 @@ import tororo1066.tororopluginapi.SStr
 import tororo1066.tororopluginapi.annotation.SCommandBody
 import tororo1066.tororopluginapi.sCommand.SCommand
 import tororo1066.tororopluginapi.sCommand.SCommandArg
+import tororo1066.tororopluginapi.sCommand.SCommandArgType
 import tororo1066.tororopluginapi.sItem.SItem
 import java.util.*
+import kotlin.collections.ArrayList
+import kotlin.collections.HashMap
 
 class MRECommand: SCommand("mrev2",Man10RealEstateV2.prefix,"mrev2.user") {
 
@@ -28,7 +32,7 @@ class MRECommand: SCommand("mrev2",Man10RealEstateV2.prefix,"mrev2.user") {
 
     @SCommandBody("mrev2.user")
     val teleport = command().addArg(SCommandArg("tp")).addArg(SCommandArg(Man10RealEstateV2.cityData.values.map { it.regions.map { map -> map.key } }.stream().flatMap { it.stream() }.toList())).setPlayerExecutor {
-        val region = Man10RealEstateV2.cityData.values.map { map -> map.regions.entries }.stream().flatMap { it.stream() }.toList().find { find -> find.value.includeName == it.args[1] }!!.value
+        val region = Man10RealEstateV2.cityData.values.map { map -> map.regions.entries }.stream().flatMap { map -> map.stream() }.toList().find { find -> find.value.includeName == it.args[1] }!!.value
         if (region.teleportLoc == null){
             it.sender.sendPrefixMsg(SStr("&cその土地にはテレポート位置が存在しません！"))
             return@setPlayerExecutor
@@ -104,6 +108,7 @@ class MRECommand: SCommand("mrev2",Man10RealEstateV2.prefix,"mrev2.user") {
         regionData.tax = city.tax
         regionData.taxCycle = city.taxCycle
         regionData.defaultPrice = city.defaultPrice
+        regionData.price = city.defaultPrice
         regionData.subUserLimit = city.subUserLimit
         regionData.buyScore = city.buyScore
         regionData.liveScore = city.liveScore
@@ -131,5 +136,24 @@ class MRECommand: SCommand("mrev2",Man10RealEstateV2.prefix,"mrev2.user") {
     val reloadCommands = opCommand().addArg(SCommandArg("reloadCommands")).setNormalExecutor {
         reloadSCommandBodies()
         it.sender.sendPrefixMsg(SStr("&aりろーどしたよ！"))
+    }
+
+    private val commandCheck = ArrayList<String>()
+
+    @SCommandBody("mrev2.op")
+    val convert = opCommand().addArg(SCommandArg("dangerous")).addArg(SCommandArg("convert")).setNormalExecutor {
+        if (commandCheck.contains(it.sender.name)){
+            it.sender.sendPrefixMsg(SStr("コンバート中..."))
+            if (MREConvert().convert()){
+                it.sender.sendPrefixMsg(SStr("&aコンバートできたよー"))
+            } else {
+                it.sender.sendPrefixMsg(SStr("&cコンバートに失敗したよー"))
+                it.sender.sendPrefixMsg(SStr("&cmreを入れてる状態で実行してね"))
+            }
+            return@setNormalExecutor
+        }
+        commandCheck.add(it.sender.name)
+        it.sender.sendPrefixMsg(SStr("&4本当に実行しますか？"))
+        it.sender.sendPrefixMsg(SStr("&4実行するにはもう一度同じコマンドを打ってください"))
     }
 }

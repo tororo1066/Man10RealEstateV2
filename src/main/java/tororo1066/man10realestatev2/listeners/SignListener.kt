@@ -40,15 +40,18 @@ class SignListener {
         e.player.sendPrefixMsg(SStr("&aステータス:${region.state.displayName}"))
         e.player.sendPrefixMsg(SStr("&aオーナー:${if (region.ownerUUID != null) Bukkit.getOfflinePlayer(region.ownerUUID!!).name else "Admin"}"))
         e.player.sendPrefixMsg(SStr("&a値段:${UsefulUtility.doubleToFormatString(region.price)}"))
+        Man10RealEstateV2.sInput.clickAccept(e.player,"${Man10RealEstateV2.prefix}§d§l[土地をいいねする！]",{
+            region.likeRegion(e.player)
+        },{},60)
         e.player.sendPrefixMsg(SStr("&a=========================================="))
 
         if (region.state == RegionData.State.ONSALE){
-            Man10RealEstateV2.sInput.clickAccept(e.player,"§a§l[土地を買う！]",{
+            Man10RealEstateV2.sInput.clickAccept(e.player,"${Man10RealEstateV2.prefix}§a§l[土地を買う！]",{
                 region.buyRegion(e.player)
             },{},60)
         }
         if (region.state == RegionData.State.LOCK && region.ownerUUID == e.player.uniqueId){
-            Man10RealEstateV2.sInput.clickAccept(e.player,"§d§l[土地を買い戻す！]",{
+            Man10RealEstateV2.sInput.clickAccept(e.player,"${Man10RealEstateV2.prefix}§d§l[土地を買い戻す！]",{
                 region.buyRegion(e.player)
             },{},60)
         }

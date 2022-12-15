@@ -4,23 +4,28 @@ import org.bukkit.Bukkit
 import org.bukkit.Material
 import org.bukkit.entity.HumanEntity
 import org.bukkit.entity.Player
+import org.bukkit.event.inventory.ClickType
 import red.man10.man10score.ScoreDatabase
 import tororo1066.man10realestatev2.Man10RealEstateV2
 import tororo1066.man10realestatev2.Man10RealEstateV2.Companion.sendPrefixMsg
 import tororo1066.man10realestatev2.data.RegionData
 import tororo1066.man10realestatev2.data.UserData
+import tororo1066.man10realestatev2.data.enumData.TaxCycle
 import tororo1066.tororopluginapi.SJavaPlugin
 import tororo1066.tororopluginapi.SStr
 import tororo1066.tororopluginapi.defaultMenus.LargeSInventory
+import tororo1066.tororopluginapi.integer.PlusInt
 import tororo1066.tororopluginapi.otherUtils.UsefulUtility
 import tororo1066.tororopluginapi.sInventory.SInventory
 import tororo1066.tororopluginapi.sInventory.SInventoryItem
 import tororo1066.tororopluginapi.sItem.SItem
 import tororo1066.tororopluginapi.utils.LocType
 import tororo1066.tororopluginapi.utils.toLocString
-import java.util.Calendar
+import java.text.SimpleDateFormat
+import java.util.*
 import java.util.concurrent.Callable
 import java.util.concurrent.Executors
+import kotlin.collections.ArrayList
 
 class RegionSettingMenu(val region: RegionData): SInventory(Man10RealEstateV2.plugin,"§a${region.includeName}",1) {
     override fun renderMenu(): Boolean {
@@ -66,6 +71,10 @@ class RegionSettingMenu(val region: RegionData): SInventory(Man10RealEstateV2.pl
                                     e.whoClicked.sendPrefixMsg(SStr("&c値段を0円未満にすることはできません！"))
                                     return@createInputItem
                                 }
+                                if (Man10RealEstateV2.regionPriceLimit != -1.0 && Man10RealEstateV2.regionPriceLimit < double){
+                                    e.whoClicked.sendPrefixMsg(SStr("&c値段は${UsefulUtility.doubleToFormatString(Man10RealEstateV2.regionPriceLimit)}円以上にできません！"))
+                                    return@createInputItem
+                                }
                                 if (SJavaPlugin.mysql.asyncExecute("update region_data set price = $double where includeName = '${region.includeName}'")){
                                     region.price = double
                                 }
@@ -84,7 +93,7 @@ class RegionSettingMenu(val region: RegionData): SInventory(Man10RealEstateV2.pl
                             it.whoClicked.sendPrefixMsg(SStr("&a設定しました"))
                         })
 
-                        setItem(20, SInventoryItem(Material.CLOCK).setDisplayName("§a賃料のスパンを変更する").addLore("§a現在のスパン:${region.rentCycle.displayName}").setCanClick(false).setClickEvent {
+                        setItem(19, SInventoryItem(Material.CLOCK).setDisplayName("§a賃料のスパンを変更する").addLore("§a現在のスパン:${region.rentCycle.displayName}").setCanClick(false).setClickEvent {
                             val newInv = object : SInventory(Man10RealEstateV2.plugin,"§aスパン",1){
                                 override fun renderMenu(): Boolean {
 
@@ -129,7 +138,7 @@ class RegionSettingMenu(val region: RegionData): SInventory(Man10RealEstateV2.pl
                         })
 
                         if (region.ownerUUID == e.whoClicked.uniqueId){
-                            setItem(24, createInputItem(SItem(Material.PLAYER_HEAD).setDisplayName("§aオーナーを変更する"),Player::class.java,"/<プレイヤー名> /cancelでキャンセル",false) { player, _ ->
+                            setItem(22, createInputItem(SItem(Material.PLAYER_HEAD).setDisplayName("§aオーナーを変更する"),Player::class.java,"/<プレイヤー名> /cancelでキャンセル",false) { player, _ ->
                                 val data = Man10RealEstateV2.cityData[region.city]!!
 
                                 player.sendPrefixMsg(SStr("&e${e.whoClicked.name}&aからオーナー権を受け取ろうとしています"))
@@ -166,6 +175,14 @@ class RegionSettingMenu(val region: RegionData): SInventory(Man10RealEstateV2.pl
                                 },{e.whoClicked.sendPrefixMsg(SStr("&c${player.name}は土地を受け取りませんでした"))},60)
                             })
                         }
+
+                        setItem(25, SInventoryItem(Material.GOLD_BLOCK).setDisplayName("§e次の税金を確認する").setCanClick(false).setClickEvent {
+                            it.whoClicked.closeInventory()
+                            it.whoClicked.sendPrefixMsg(SStr("&e次の税金:" +
+                                    if (region.taxCycle == TaxCycle.NONE) "無し" else SimpleDateFormat("yyyy/MM/dd kk:mm:ss").format(Date(region.lastTax * 1000 + region.taxCycle.amount))
+                            ))
+                            it.whoClicked.sendPrefixMsg(SStr("&e税金:${UsefulUtility.doubleToFormatString(if (region.tax == null) Man10RealEstateV2.cityData[region.city]!!.tax else region.tax!!)}円"))
+                        })
                         return true
                     }
                 }
@@ -232,6 +249,12 @@ class RegionSettingMenu(val region: RegionData): SInventory(Man10RealEstateV2.pl
                                                 }
                                                 updatePerm()
                                             })
+
+                                        setItem(7,createInputItem(SItem(Material.EMERALD).setDisplayName("§a賃料を設定する").addLore("§a現在:${it.rent}円"),PlusInt::class.java,"/<賃料(/cancelでキャンセル)>",{ int, _ ->
+                                            if (SJavaPlugin.mysql.asyncExecute("update user_data set rent = ${int.get().toDouble()} where region_id = '${region.includeName}' and uuid = '${it.uuid}' ")){
+                                                it.rent = int.get().toDouble()
+                                            }
+                                        },{ "§c0以上で設定してください！" },ClickType.values().toList(),false))
                                         return true
                                     }
                                 }

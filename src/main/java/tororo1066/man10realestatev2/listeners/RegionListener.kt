@@ -11,6 +11,7 @@ import org.bukkit.event.block.BlockBreakEvent
 import org.bukkit.event.block.BlockPlaceEvent
 import org.bukkit.event.entity.EntityDamageByEntityEvent
 import org.bukkit.event.player.PlayerBucketEmptyEvent
+import org.bukkit.event.player.PlayerFishEvent
 import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.material.Colorable
 import tororo1066.man10realestatev2.Man10RealEstateV2
@@ -89,6 +90,15 @@ class RegionListener {
             e.isCancelled = true
         }
     }
+
+//    @SEventHandler
+//    fun onFish(e: PlayerFishEvent){
+//        if (e.state == PlayerFishEvent.State.FISHING){
+//            if (CityData.findCity(e.player.location) != null && !e.player.hasPermission("mrev2.op")){
+//                e.isCancelled = true
+//            }
+//        }
+//    }
 
 
 

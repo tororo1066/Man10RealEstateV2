@@ -110,6 +110,7 @@ class RegionEdit(val data: RegionData, val city: String): LargeSInventory(Man10R
                         "('${city}','${data.includeName}','${data.displayName}',${data.tax},${if (data.subUserLimit == null) -1 else data.subUserLimit},${if (data.buyScore == null) -1 else data.buyScore},${if (data.liveScore == null) -1 else data.liveScore}," +
                         "${data.defaultPrice},'${data.startLoc.first},${data.startLoc.second},${data.startLoc.third}','${data.endLoc.first},${data.endLoc.second},${data.endLoc.third}'," +
                         "${data.defaultPrice},'none','${data.state.name}','${data.rentCycle.name}',${data.lastTax},'${data.taxCycle.name}',${data.lastTax},'none')")
+                data.price
                 Man10RealEstateV2.cityData[city]!!.regions[data.includeName] = data
                 (it.whoClicked as Player).sendPrefixMsg(SStr("&a保存したよ～"))
                 it.whoClicked.closeInventory()

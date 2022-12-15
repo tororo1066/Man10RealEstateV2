@@ -31,7 +31,7 @@ class RegionData {
     var buyScore: Int? = null
     var liveScore: Int? = null
 
-    var defaultPrice = 0.0
+    var defaultPrice: Double? = null
 
     lateinit var startLoc: Triple<Int,Int,Int>
     lateinit var endLoc: Triple<Int,Int,Int>
@@ -72,6 +72,10 @@ class RegionData {
             p.sendPrefixMsg(SStr("&c土地を買う権限がありません！"))
             return false
         }
+        if (ownerUUID == p.uniqueId){
+            p.sendPrefixMsg(SStr("&c自分の土地を買うことはできません！"))
+            return false
+        }
         val city = Man10RealEstateV2.cityData[city]!!
         if (city.regionLimit != null && city.regions.filter { it.value.ownerUUID == p.uniqueId }.size >= city.regionLimit!!){
             p.sendPrefixMsg(SStr("&cここの町の土地の所持数が上限に達しています！"))
@@ -103,6 +107,30 @@ class RegionData {
         }
     }
 
+    fun likeRegion(p: Player){
+        val data = Man10RealEstateV2.likeData[p.uniqueId]
+        if (data != null){
+            if (data.likes.contains(includeName)){
+                p.sendPrefixMsg(SStr("&c既にこの土地をいいねしています！"))
+                return
+            }
+        }
+
+        if (SJavaPlugin.mysql.asyncExecute("insert into like_data (uuid, mcid, region_id) values ('${p.uniqueId}', '${p.name}', ${includeName})")){
+            if (data == null){
+                val newData = LikeData()
+                newData.uuid = p.uniqueId
+                newData.mcid = p.name
+                newData.likes.add(includeName)
+                Man10RealEstateV2.likeData[p.uniqueId] = newData
+            } else {
+                data.likes.add(includeName)
+            }
+
+            p.sendPrefixMsg(SStr("&a土地をいいねしました！"))
+        }
+    }
+
     companion object{
         fun loadFromSQL(result: SMySQLResultSet, world: World, city: String): RegionData {
             val data = RegionData()
@@ -114,7 +142,7 @@ class RegionData {
             data.subUserLimit = if (result.getInt("userLimit") == -1) null else result.getInt("userLimit")
             data.buyScore = if (result.getInt("buyScore") == -1) null else result.getInt("buyScore")
             data.liveScore = if (result.getInt("liveScore") == -1) null else result.getInt("liveScore")
-            data.defaultPrice = result.getDouble("defaultPrice")
+            data.defaultPrice = if (result.getDouble("defaultPrice") == -1.0) null else result.getDouble("defaultPrice")
             val startLoc = result.getString("startLoc").split(",").map { it.toInt() }
             data.startLoc = Triple(startLoc[0],startLoc[1],startLoc[2])
             val endLoc = result.getString("endLoc").split(",").map { it.toInt() }
